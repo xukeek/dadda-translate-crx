@@ -311,6 +311,19 @@ Storage.get(TR_SETTING_HIDE_CONTEXT_MENU_OPTION, false).then(value => {
   }
 })
 
+/**
+ * @summary 注册右键翻译页面
+ */
+chrome.contextMenus.create({
+  title: '达达页面翻译',
+  contexts: ['selection', 'page'],
+  onclick: (info, tab) => {
+    chrome.tabs.executeScript({
+      code: "document.dispatchEvent(new CustomEvent('translatePage'))"
+    })
+  }
+})
+
 chrome.webRequest.onBeforeSendHeaders.addListener(
   details => {
     const refererIndex = details.requestHeaders.findIndex(({ name }) => {

@@ -128,7 +128,7 @@ export default {
   },
 
   async mounted() {
-    const { onMouseUp, changeDirectSetting, onEscDown, toggleInput } = this
+    const { onMouseUp, changeDirectSetting, onEscDown, toggleInput, onTranslatePage } = this
 
     document.addEventListener('mouseup', onMouseUp)
     document.addEventListener('keydown', changeDirectSetting)
@@ -137,6 +137,7 @@ export default {
     document.addEventListener('contextMenuClick', e => {
       onMouseUp({ clientX: 0, clientY: 0, pageY: 0 }, e.detail.text)
     })
+    document.addEventListener('translatePage', onTranslatePage)
   },
 
   methods: {
@@ -157,6 +158,29 @@ export default {
         this.hidePanel()
         this.hideInput()
       }
+    },
+
+    onTranslatePage(e) {
+      document.querySelectorAll('p,a').forEach(n => {
+        let content = n.childNodes[0].nodeValue
+        if (content && content.length > 0 && !/^\s*$/.test(content)) {
+          this.translatePage(n, content)
+        }
+      })
+    },
+
+    async translatePage(node, text) {
+      const {
+        $root,
+        $root: { inExtension }
+      } = this
+      chrome.runtime.sendMessage({ name: 'translate', text, inExtension }, (res) => {
+        if (!res.isHasOxford && /^[A-Z][a-zA-Z]*$/.test(text)) {
+          return this.translatePage(text.toLowerCase())
+        }
+        console.info(res)
+        node.childNodes[0].nodeValue = node.childNodes[0].nodeValue + ' ' + res.translate.dit
+      })
     },
 
     async changeDirectSetting(e) {
